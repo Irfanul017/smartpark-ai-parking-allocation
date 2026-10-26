@@ -9,7 +9,14 @@ from sqlalchemy import create_engine, inspect, text
 from sqlalchemy.orm import DeclarativeBase, Session, sessionmaker
 
 
-DATABASE_URL = os.getenv("SMARTPARK_DATABASE_URL", "sqlite:///./smartpark.db")
+DATABASE_URL = (
+    os.getenv("SMARTPARK_DATABASE_URL")
+    or os.getenv("DATABASE_URL")
+    or os.getenv("POSTGRES_URL")
+    or "sqlite:///./smartpark.db"
+)
+if DATABASE_URL.startswith("postgres://"):
+    DATABASE_URL = "postgresql://" + DATABASE_URL.removeprefix("postgres://")
 _connect_args = {"check_same_thread": False} if DATABASE_URL.startswith("sqlite") else {}
 engine = create_engine(DATABASE_URL, connect_args=_connect_args)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)

@@ -1,5 +1,7 @@
 """FastAPI entry point for SmartPark AI."""
 
+import os
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -13,10 +15,11 @@ app = FastAPI(
     version="0.1.0",
 )
 
-# Development origins used by the Vite frontend. Expand this list for deployed clients.
+# Add the deployed frontend URL through SMARTPARK_CORS_ORIGINS.
+deployment_origins = [origin.strip() for origin in os.getenv("SMARTPARK_CORS_ORIGINS", "").split(",") if origin.strip()]
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
+    allow_origins=deployment_origins + [
         "http://localhost:5173",
         "http://127.0.0.1:5173",
         "http://localhost:5174",

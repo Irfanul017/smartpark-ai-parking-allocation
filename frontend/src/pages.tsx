@@ -1,8 +1,6 @@
 import { FormEvent, useEffect, useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Bar, BarChart, Cell, Pie, PieChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
-import axios from "axios";
-
 import api, { apiError, ParkingRequest, ParkingSession, Recommendation, Slot } from "./api";
 import { useAuth } from "./App";
 
@@ -25,8 +23,8 @@ export function HomePage() {
   const [health, setHealth] = useState("Checking backend health…");
 
   useEffect(() => {
-    axios
-      .get<{ status: string }>("http://127.0.0.1:8001/health")
+    api
+      .get<{ status: string }>("/health")
       .then(({ data }) => setHealth(`Backend status: ${data.status}`))
       .catch(() => setHealth("Backend unavailable — start the FastAPI server to connect."));
   }, []);
