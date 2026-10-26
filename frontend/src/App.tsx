@@ -1,10 +1,10 @@
-import { createContext, useContext, useEffect, useState } from "react";
+import { createContext, useContext, useEffect, useRef, useState } from "react";
 import { NavLink, Navigate, Route, Routes, useNavigate } from "react-router-dom";
 
 import api, { User } from "./api";
 import { AdminPage, DashboardPage, FindParkingPage, HistoryPage, LandingPage, LoginPage, ParkingMapPage, RecommendationsPage, RegisterPage } from "./pages";
 
-type AuthContextValue = { user: User | null; loading: boolean; refresh: () => Promise<void>; logout: () => void };
+type AuthContextValue = { user: User | null; loading: boolean; refresh: () => Promise<boolean>; logout: () => void };
 const AuthContext = createContext<AuthContextValue | null>(null);
 export const useAuth = () => {
   const value = useContext(AuthContext);
@@ -15,15 +15,27 @@ export const useAuth = () => {
 function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const authRequest = useRef(0);
   const refresh = async () => {
+    const requestId = ++authRequest.current;
     const token = localStorage.getItem("smartpark_token");
-    if (!token) { setUser(null); setLoading(false); return; }
-    try { setUser((await api.get<User>("/api/auth/me")).data); }
-    catch { localStorage.removeItem("smartpark_token"); setUser(null); }
-    finally { setLoading(false); }
+    if (!token) { setUser(null); setLoading(false); return false; }
+    try {
+      const response = await api.get<User>("/api/auth/me", { headers: { Authorization: `Bearer ${token}` } });
+      if (requestId !== authRequest.current || localStorage.getItem("smartpark_token") !== token) return false;
+      setUser(response.data);
+      return true;
+    } catch {
+      if (requestId !== authRequest.current || localStorage.getItem("smartpark_token") !== token) return false;
+      localStorage.removeItem("smartpark_token");
+      setUser(null);
+      return false;
+    } finally {
+      if (requestId === authRequest.current) setLoading(false);
+    }
   };
   useEffect(() => { void refresh(); }, []);
-  const logout = () => { localStorage.removeItem("smartpark_token"); sessionStorage.removeItem("smartpark_recommendations"); setUser(null); };
+  const logout = () => { authRequest.current += 1; localStorage.removeItem("smartpark_token"); sessionStorage.removeItem("smartpark_recommendations"); setUser(null); setLoading(false); };
   return <AuthContext.Provider value={{ user, loading, refresh, logout }}>{children}</AuthContext.Provider>;
 }
 
