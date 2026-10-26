@@ -13,7 +13,7 @@ export type Recommendation = { slot: string; slot_id: number; score: number; cat
 export type ParkingSession = { id: number; slot_id: number; user_id: number | null; vehicle_number?: string | null; vehicle_type: string; priority: number; started_at: string; ended_at: string | null };
 
 const api = axios.create({
-  baseURL: (import.meta.env.VITE_API_URL || "http://127.0.0.1:8001").replace(/\/$/, ""),
+  baseURL: (import.meta.env.VITE_API_URL ?? (import.meta.env.PROD ? "" : "http://127.0.0.1:8001")).replace(/\/$/, ""),
 });
 
 api.interceptors.request.use((config) => {

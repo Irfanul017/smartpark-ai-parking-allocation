@@ -24,7 +24,7 @@ export function HomePage() {
 
   useEffect(() => {
     api
-      .get<{ status: string }>("/health")
+      .get<{ status: string }>("/api/health")
       .then(({ data }) => setHealth(`Backend status: ${data.status}`))
       .catch(() => setHealth("Backend unavailable — start the FastAPI server to connect."));
   }, []);
