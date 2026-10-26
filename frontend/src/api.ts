@@ -8,11 +8,11 @@ export type Slot = {
   is_ev: boolean; is_accessible: boolean; is_reserved: boolean; is_occupied: boolean; distance_from_entrance: number;
   walking_distance: number; congestion_level: number; created_at: string;
 };
-export type ParkingRequest = { vehicle_type: string; requires_ev: boolean; requires_accessible: boolean; priority: number };
+export type ParkingRequest = { vehicle_number?: string; vehicle_type: string; requires_ev: boolean; requires_accessible: boolean; priority: number };
 export type Recommendation = { slot: string; slot_id: number; score: number; category: string; reason: string; factors: Record<string, unknown> };
-export type ParkingSession = { id: number; slot_id: number; user_id: number | null; vehicle_type: string; priority: number; started_at: string; ended_at: string | null };
+export type ParkingSession = { id: number; slot_id: number; user_id: number | null; vehicle_number?: string | null; vehicle_type: string; priority: number; started_at: string; ended_at: string | null };
 
-const api = axios.create({ baseURL: "http://127.0.0.1:8000" });
+const api = axios.create({ baseURL: "http://127.0.0.1:8001" });
 
 api.interceptors.request.use((config) => {
   const token = localStorage.getItem("smartpark_token");

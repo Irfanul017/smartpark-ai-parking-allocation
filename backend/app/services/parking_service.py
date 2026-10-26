@@ -78,7 +78,25 @@ class ParkingService:
             return False
         if request.requires_accessible and not slot.is_accessible:
             return False
-        return slot.vehicle_type.strip().casefold() == request.vehicle_type.strip().casefold()
+
+        req_type = request.vehicle_type.strip().casefold()
+        slot_type = slot.vehicle_type.strip().casefold()
+
+        # Direct vehicle type match
+        if req_type == slot_type:
+            return True
+
+        # Electric vehicle and standard car interoperability:
+        # A Car requesting EV can use an EV slot (categorized as Electric Car).
+        # An Electric Car can also park in a standard Car slot if EV is not strictly required.
+        if {req_type, slot_type}.issubset({"car", "electric car"}):
+            return True
+
+        # Accessible slots are accessible to SUVs and Vans if accessibility is requested
+        if request.requires_accessible and slot.is_accessible and req_type in {"suv", "van"}:
+            return True
+
+        return False
 
     @staticmethod
     def _commit_slot(db: Session, slot: ParkingSlot) -> ParkingSlot:

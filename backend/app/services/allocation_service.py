@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import datetime
+from datetime import datetime, timedelta
 
 from sqlalchemy import select
 from sqlalchemy.orm import Session
@@ -22,13 +22,49 @@ class AllocationService:
         if not parking_service.is_compatible(slot, request):
             raise ValueError("Selected parking slot is incompatible with this request.")
 
-        session = ParkingSession(slot_id=slot.id, user_id=user_id, vehicle_type=request.vehicle_type, priority=request.priority)
+        # Clear hold reservation upon active allocation
+        slot.is_reserved = False
+        slot.reserved_until = None
+        session = ParkingSession(
+            slot_id=slot.id,
+            user_id=user_id,
+            vehicle_number=request.vehicle_number,
+            vehicle_type=request.vehicle_type,
+            priority=request.priority,
+        )
         slot.is_occupied = True
         db.add(session)
         db.commit()
         db.refresh(session)
         db.refresh(slot)
         return session, slot
+
+    def hold_slot(self, db: Session, slot_id: int, hold_minutes: int = 15) -> ParkingSlot:
+        slot = db.get(ParkingSlot, slot_id)
+        if slot is None:
+            raise LookupError("Parking slot was not found.")
+        if slot.is_occupied:
+            raise ValueError("Cannot hold an occupied parking slot.")
+
+        now = datetime.utcnow()
+        if slot.is_reserved and slot.reserved_until and slot.reserved_until > now:
+            raise ValueError(f"Slot {slot.slot_number} is currently held on reservation until {slot.reserved_until.strftime('%H:%M:%S')}.")
+
+        slot.is_reserved = True
+        slot.reserved_until = now + timedelta(minutes=hold_minutes)
+        db.commit()
+        db.refresh(slot)
+        return slot
+
+    def cancel_hold(self, db: Session, slot_id: int) -> ParkingSlot:
+        slot = db.get(ParkingSlot, slot_id)
+        if slot is None:
+            raise LookupError("Parking slot was not found.")
+        slot.is_reserved = False
+        slot.reserved_until = None
+        db.commit()
+        db.refresh(slot)
+        return slot
 
     def release(self, db: Session, slot_id: int, user_id: int, is_privileged: bool = False) -> ParkingSession:
         slot = db.get(ParkingSlot, slot_id)

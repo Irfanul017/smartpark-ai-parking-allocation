@@ -39,7 +39,13 @@ def init_database() -> None:
         if "user_id" not in session_columns:
             with engine.begin() as connection:
                 connection.execute(text("ALTER TABLE parking_sessions ADD COLUMN user_id INTEGER"))
+        if "vehicle_number" not in session_columns:
+            with engine.begin() as connection:
+                connection.execute(text("ALTER TABLE parking_sessions ADD COLUMN vehicle_number VARCHAR(30)"))
         slot_columns = {column["name"] for column in inspect(engine).get_columns("parking_slots")}
         if "is_reserved" not in slot_columns:
             with engine.begin() as connection:
                 connection.execute(text("ALTER TABLE parking_slots ADD COLUMN is_reserved BOOLEAN NOT NULL DEFAULT 0"))
+        if "reserved_until" not in slot_columns:
+            with engine.begin() as connection:
+                connection.execute(text("ALTER TABLE parking_slots ADD COLUMN reserved_until DATETIME"))

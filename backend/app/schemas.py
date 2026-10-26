@@ -17,6 +17,7 @@ class SlotBase(BaseModel):
     is_ev: bool = False
     is_accessible: bool = False
     is_reserved: bool = False
+    reserved_until: datetime | None = None
     is_occupied: bool = False
     distance_from_entrance: float = Field(ge=0, le=200)
     walking_distance: float = Field(ge=0, le=200)
@@ -36,6 +37,7 @@ class SlotUpdate(BaseModel):
     is_ev: bool | None = None
     is_accessible: bool | None = None
     is_reserved: bool | None = None
+    reserved_until: datetime | None = None
     is_occupied: bool | None = None
     distance_from_entrance: float | None = Field(default=None, ge=0, le=200)
     walking_distance: float | None = Field(default=None, ge=0, le=200)
@@ -49,6 +51,7 @@ class SlotRead(SlotBase):
 
 
 class ParkingRequest(BaseModel):
+    vehicle_number: str | None = Field(default=None, max_length=30)
     vehicle_type: str = Field(min_length=1, max_length=30)
     requires_ev: bool = False
     requires_accessible: bool = False
@@ -70,6 +73,21 @@ class RecommendationResponse(BaseModel):
 
 class AllocationRequest(ParkingRequest):
     selected_slot_id: int = Field(gt=0)
+
+
+class HoldRequest(BaseModel):
+    slot_id: int = Field(gt=0)
+    hold_minutes: int = Field(default=15, ge=1, le=60)
+    vehicle_number: str | None = Field(default=None, max_length=30)
+
+
+class HoldResponse(BaseModel):
+    slot_id: int
+    slot: str
+    is_reserved: bool
+    reserved_until: datetime
+    hold_seconds: int
+    vehicle_number: str | None = None
 
 
 class ReleaseRequest(BaseModel):
@@ -135,6 +153,7 @@ class SessionRead(BaseModel):
     id: int
     slot_id: int
     user_id: int | None
+    vehicle_number: str | None = None
     vehicle_type: str
     priority: float
     started_at: datetime

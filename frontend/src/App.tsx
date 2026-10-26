@@ -31,14 +31,19 @@ const nav = [["/dashboard", "Dashboard"], ["/find-parking", "Find parking"], ["/
 
 function Shell({ children }: { children: React.ReactNode }) {
   const { user, logout } = useAuth(); const navigate = useNavigate();
+  const [menuOpen, setMenuOpen] = useState(false);
+  const closeMenu = () => setMenuOpen(false);
   return <div className="min-h-screen bg-[#f6f8fb] text-slate-900">
     <header className="sticky top-0 z-30 border-b border-slate-200 bg-white/95 backdrop-blur">
-      <nav className="mx-auto flex max-w-7xl items-center justify-between gap-5 px-5 py-3">
-        <NavLink to="/dashboard" className="flex items-center gap-2 font-bold tracking-tight"><span className="grid h-8 w-8 place-items-center rounded-lg bg-teal-600 text-white">P</span>SMARTPARK <span className="text-teal-600">AI</span></NavLink>
+      <nav className="mx-auto flex max-w-7xl items-center justify-between gap-3 px-4 py-3 sm:gap-5 sm:px-5">
+        <NavLink to="/dashboard" onClick={closeMenu} className="flex shrink-0 items-center gap-2 font-bold tracking-tight"><span className="grid h-8 w-8 place-items-center rounded-lg bg-teal-600 text-white">P</span><span>SMARTPARK <span className="text-teal-600">AI</span></span></NavLink>
         <div className="hidden items-center gap-1 lg:flex">{nav.map(([to, label]) => <NavLink key={to} to={to} className={({ isActive }) => `nav-link ${isActive ? "nav-link-active" : ""}`}>{label}</NavLink>)}{user?.role === "ADMIN" && <NavLink to="/admin" className={({ isActive }) => `nav-link ${isActive ? "nav-link-active" : ""}`}>Admin</NavLink>}</div>
-        <div className="flex items-center gap-3"><span className="hidden text-sm text-slate-500 sm:block">{user?.username} · {user?.role}</span><button className="btn-secondary" onClick={() => { logout(); navigate("/"); }}>Sign out</button></div>
+        <div className="flex shrink-0 items-center gap-2 sm:gap-3"><span className="hidden text-sm text-slate-500 sm:block">{user?.username} · {user?.role}</span><button className="btn-secondary px-2.5 sm:px-3" onClick={() => { logout(); navigate("/"); closeMenu(); }}>Sign out</button><button type="button" className="btn-secondary grid h-10 w-10 place-items-center px-0 lg:hidden" aria-label={menuOpen ? "Close navigation menu" : "Open navigation menu"} aria-expanded={menuOpen} aria-controls="mobile-navigation" onClick={() => setMenuOpen((open) => !open)}>{menuOpen ? <span aria-hidden="true" className="text-lg">×</span> : <span aria-hidden="true" className="text-lg">☰</span>}</button></div>
       </nav>
-    </header><main className="mx-auto max-w-7xl px-5 py-8">{children}</main>
+      <div id="mobile-navigation" className={`${menuOpen ? "block" : "hidden"} border-t border-slate-100 px-4 pb-3 pt-2 lg:hidden`}>
+        <div className="mx-auto grid max-w-7xl gap-1">{nav.map(([to, label]) => <NavLink key={to} to={to} onClick={closeMenu} className={({ isActive }) => `nav-link w-full ${isActive ? "nav-link-active" : ""}`}>{label}</NavLink>)}{user?.role === "ADMIN" && <NavLink to="/admin" onClick={closeMenu} className={({ isActive }) => `nav-link w-full ${isActive ? "nav-link-active" : ""}`}>Admin</NavLink>}</div>
+      </div>
+    </header><main className="mx-auto max-w-7xl px-4 py-6 sm:px-5 sm:py-8">{children}</main>
   </div>;
 }
 

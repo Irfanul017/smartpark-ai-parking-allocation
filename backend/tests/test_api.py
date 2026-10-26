@@ -76,12 +76,17 @@ def test_allocate_then_release_changes_slot_and_session_state(client: TestClient
     slot = create_slot(client, admin_headers, "B01")
     allocation = client.post(
         "/api/parking/allocate",
-        json={"selected_slot_id": slot["id"], "vehicle_type": "Car", "priority": 80},
+        json={"selected_slot_id": slot["id"], "vehicle_number": "MH 12 AB 1234", "vehicle_type": "Car", "priority": 80},
         headers=user_headers,
     )
     assert allocation.status_code == 200
     assert allocation.json()["status"] == "allocated"
     assert client.get(f"/api/parking/slots/{slot['id']}", headers=user_headers).json()["is_occupied"] is True
+    
+    history = client.get("/api/parking/history", headers=user_headers).json()
+    assert len(history) > 0
+    assert history[0]["vehicle_number"] == "MH 12 AB 1234"
+
     assert client.post("/api/parking/allocate", json={"selected_slot_id": slot["id"], "vehicle_type": "Car"}, headers=user_headers).status_code == 409
 
     released = client.post("/api/parking/release", json={"slot_id": slot["id"]}, headers=user_headers)
