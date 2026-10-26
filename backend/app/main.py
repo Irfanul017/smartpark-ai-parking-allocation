@@ -49,6 +49,7 @@ def root() -> dict[str, str]:
 
 
 @app.get("/health", tags=["system"])
+@app.get("/api/health", tags=["system"])
 def health_check() -> dict[str, str]:
     """Return a lightweight service health status."""
     return {"status": "healthy"}
